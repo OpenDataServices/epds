@@ -1,0 +1,8 @@
+# Natural England - https://www.gov.uk/government/organisations/natural-england
+
+local_nature.sql - Local Nature Reserves: 
+    http://www.nationalarchives.gov.uk/doc/open-government-licence/version/
+
+national_nature.sql - National Nature Reserves:
+    http://www.nationalarchives.gov.uk/doc/open-government-licence/version/
+
