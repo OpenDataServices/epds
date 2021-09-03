@@ -25,6 +25,8 @@ The connection string `postgresql://epds:epds@localhost:5432/epds` can be used t
 ```bash
 psql postgresql://epds:epds@localhost:5432/epds -f data/local_nature.sql
 psql postgresql://epds:epds@localhost:5432/epds -f data/national_nature.sql
+psql postgresql://epds:epds@localhost:5432/epds -f data/iba.sql
+psql postgresql://epds:epds@localhost:5432/epds -f data/sssi.sql
 ```
 
 ### Importing new datasources.
