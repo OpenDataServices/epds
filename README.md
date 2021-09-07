@@ -29,6 +29,15 @@ psql postgresql://epds:epds@localhost:5432/epds -f data/iba.sql
 psql postgresql://epds:epds@localhost:5432/epds -f data/sssi.sql
 ```
 
+#### Planit Data
+
+```
+mkdir output
+python scrapers/planit.py
+python scrapers/planit_load.py
+psql -f scrapers/planit_load.sql
+```
+
 ### Importing new datasources.
 
 #### From shapefile.
