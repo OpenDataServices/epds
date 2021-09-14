@@ -16,12 +16,12 @@ def cli():
     pass
 
 @click.command()
-@click.option('--download/--no-download', default=True)
-def full_scrape(download):
+@click.option('--skipdownload', default=False)
+def full_scrape(skipdownload):
     date = datetime.date.today()
     os.makedirs('_planit_output/full', exist_ok=True)
 
-    if download:
+    if not skipdownload:
         download(date, 150)
 
     transform_to_csv()
@@ -38,7 +38,8 @@ def full_scrape(download):
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float),
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float)
     FROM 
-       planit_load;
+       planit_load
+    ON CONFLICT DO NOTHING;
 
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_ibas;
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_rspb_reserves;
@@ -53,7 +54,7 @@ def full_scrape(download):
 def update_scrape():
     date = datetime.date.today()
     os.makedirs(f'_planit_output/{str(date)}', exist_ok=True)
-    download(date, 3)
+    download(date, 30)
     transform_to_csv(str(date))
 
     sql = f'''
