@@ -27,12 +27,12 @@ def full_scrape(skipdownload):
     transform_to_csv()
 
     sql = f'''
-    \copy planit_load(key, file, data, load_date, hash, uid) FROM _planit_output/full/all.csv with CSV
+    \copy planit_load(key, file, data, load_date, hash, name) FROM _planit_output/full/all.csv with CSV
 
-    INSERT INTO planit(load_id, uid, data, latest_change_date, geom, geog) 
+    INSERT INTO planit(load_id, name, data, latest_change_date, geom, geog) 
     SELECT 
        id, 
-       uid,
+       name,
        data, 
        load_date, 
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float),
@@ -59,17 +59,17 @@ def update_scrape():
 
     sql = f'''
     BEGIN;
-    CREATE TEMPORARY TABLE planit_load_tmp(key INT, file TEXT, data JSONB, load_date DATE, hash TEXT, uid TEXT);
-    CREATE INDEX planit_load_tmp_uid on planit_load_tmp(uid);
+    CREATE TEMPORARY TABLE planit_load_tmp(key INT, file TEXT, data JSONB, load_date DATE, hash TEXT, name TEXT);
+    CREATE INDEX planit_load_tmp_name on planit_load_tmp(name);
 
-    \copy planit_load_tmp(key, file, data, load_date, hash, uid) FROM _planit_output/{str(date)}/all.csv with CSV;
+    \copy planit_load_tmp(key, file, data, load_date, hash, name) FROM _planit_output/{str(date)}/all.csv with CSV;
 
-    INSERT INTO planit_load(key, file, data, load_date, hash, uid, new, changed) 
+    INSERT INTO planit_load(key, file, data, load_date, hash, name, new, changed) 
     SELECT 
-      planit_load_tmp.*, CASE WHEN planit.uid is null THEN true ELSE false END, CASE WHEN planit.uid is null THEN false ELSE true END
+      planit_load_tmp.*, CASE WHEN planit.name is null THEN true ELSE false END, CASE WHEN planit.name is null THEN false ELSE true END
     FROM  
       planit_load_tmp
-    LEFT JOIN planit USING (uid)
+    LEFT JOIN planit USING (name)
     ON CONFLICT DO NOTHING;
 
     DROP TABLE planit_load_tmp;
@@ -85,7 +85,7 @@ def update_scrape():
        planit_load pl
     WHERE
        load_date = '{str(date)}'
-    ON CONFLICT (uid) DO UPDATE
+    ON CONFLICT (name) DO UPDATE
        set load_id=excluded.load_id, data=excluded.data, latest_change_date=excluded.latest_change_date;
 
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_ibas;
@@ -115,16 +115,17 @@ def setup():
                                               data JSONB,
                                               load_date DATE,
                                               hash TEXT,
-                                              uid TEXT,
+                                              name TEXT,
                                               new bool DEFAULT FALSE,
                                               changed bool DEFAULT FALSE,
                                               processed bool DEFAULT FALSE);
 
        CREATE UNIQUE INDEX planit_load_hash_idx ON planit_load(hash);
-       CREATE INDEX planit_load_uid_idx ON planit_load(uid);
+       CREATE UNIQUE INDEX planit_load_id_idx ON planit_load(id);
+       CREATE INDEX planit_load_name_idx ON planit_load(name);
 
        CREATE TABLE IF NOT EXISTS planit(id serial, 
-                                         uid TEXT, 
+                                         name TEXT, 
                                          load_id bigint, 
                                          data jsonb, 
                                          latest_change_date date);
@@ -133,7 +134,8 @@ def setup():
        SELECT AddGeometryColumn ('public','planit','geom',4326,'POINT',2);
        ALTER TABLE planit ADD COLUMN geog GEOGRAPHY;
 
-       CREATE UNIQUE INDEX planit_uid ON planit(uid);
+       CREATE UNIQUE INDEX planit_name ON planit(name);
+       CREATE UNIQUE INDEX planit_id ON planit(id);
 
        CREATE INDEX planit_planit_load_id ON planit(load_id);
 
@@ -211,7 +213,7 @@ def transform_to_csv(path='full'):
                 for item in data['records']:
                     original_json_dump = json.dumps(item)
                     item.pop('last_scraped')
-                    writer.writerow([i, f, original_json_dump, str(datetime.date.today()), str(sha1(json.dumps(item).encode()).hexdigest()), item['uid']])
+                    writer.writerow([i, f, original_json_dump, str(datetime.date.today()), str(sha1(json.dumps(item).encode()).hexdigest()), item['name']])
                     i += 1
 
 
