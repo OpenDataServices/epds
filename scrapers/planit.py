@@ -54,7 +54,7 @@ def full_scrape(skipdownload):
 def update_scrape():
     date = datetime.date.today()
     os.makedirs(f'_planit_output/{str(date)}', exist_ok=True)
-    download(date, 30)
+    download(date, 180)
     transform_to_csv(str(date))
 
     sql = f'''
@@ -109,7 +109,7 @@ def clean():
 def setup():
     os.makedirs('_planit_output/full', exist_ok=True)
     run_sql('''
-       CREATE TABLE IF NOT EXISTS planit_load(id SERIAL,
+       CREATE TABLE IF NOT EXISTS planit_load(id SERIAL PRIMARY KEY,
                                               key INT,
                                               file TEXT,
                                               data JSONB,
@@ -121,10 +121,9 @@ def setup():
                                               processed bool DEFAULT FALSE);
 
        CREATE UNIQUE INDEX planit_load_hash_idx ON planit_load(hash);
-       CREATE UNIQUE INDEX planit_load_id_idx ON planit_load(id);
        CREATE INDEX planit_load_name_idx ON planit_load(name);
 
-       CREATE TABLE IF NOT EXISTS planit(id serial, 
+       CREATE TABLE IF NOT EXISTS planit(id SERIAL PRIMARY KEY, 
                                          name TEXT, 
                                          load_id bigint, 
                                          data jsonb, 
@@ -135,7 +134,6 @@ def setup():
        ALTER TABLE planit ADD COLUMN geog GEOGRAPHY;
 
        CREATE UNIQUE INDEX planit_name ON planit(name);
-       CREATE UNIQUE INDEX planit_id ON planit(id);
 
        CREATE INDEX planit_planit_load_id ON planit(load_id);
 
