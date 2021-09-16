@@ -16,13 +16,14 @@ def cli():
     pass
 
 @click.command()
-@click.option('--skipdownload', default=False)
-def full_scrape(skipdownload):
+@click.option('--skipdownload', default=False, is_flag=True)
+@click.option('--days', default=15*360)
+def full_scrape(skipdownload, days):
     date = datetime.date.today()
     os.makedirs('_planit_output/full', exist_ok=True)
 
     if not skipdownload:
-        download(date, 150)
+        download(date, int(days), 'full')
 
     transform_to_csv()
 
@@ -43,6 +44,7 @@ def full_scrape(skipdownload):
 
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_ibas;
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_rspb_reserves;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY planit_key_fields;
 
     UPDATE planit_load SET new=true, processed=true;
        
@@ -51,10 +53,11 @@ def full_scrape(skipdownload):
 
 
 @click.command()
-def update_scrape():
+@click.option('--days', default=180)
+def update_scrape(days):
     date = datetime.date.today()
     os.makedirs(f'_planit_output/{str(date)}', exist_ok=True)
-    download(date, 180)
+    download(date, int(days), str(date))
     transform_to_csv(str(date))
 
     sql = f'''
@@ -90,6 +93,7 @@ def update_scrape():
 
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_ibas;
     REFRESH MATERIALIZED VIEW CONCURRENTLY near_rspb_reserves;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY planit_key_fields;
     
     COMMIT
        
@@ -101,6 +105,7 @@ def update_scrape():
 def clean():
     run_sql('DROP MATERIALIZED VIEW IF EXISTS near_ibas')
     run_sql('DROP MATERIALIZED VIEW IF EXISTS near_rspb_reserves')
+    run_sql('DROP MATERIALIZED VIEW IF EXISTS planit_key_fields')
     run_sql('DROP TABLE IF EXISTS planit')
     run_sql('DROP TABLE IF EXISTS planit_load')
     shutil.rmtree('_planit_output')
@@ -146,6 +151,49 @@ def setup():
             SELECT distinct(id) from planit, rspb_reserves WHERE ST_DWithin(rspb_reserves.geog, planit.geog, 500, false);
 
        CREATE UNIQUE INDEX near_rspb_reserves_id ON near_rspb_reserves(id);
+       
+       CREATE MATERIALIZED VIEW planit_key_fields AS
+            SELECT
+              id,
+              data ->> 'address' address,
+              data ->> 'altid' altid,
+              data ->> 'app_size' app_size,
+              data ->> 'app_state' app_state,
+              data ->> 'app_type' app_type,
+              data ->> 'area_id' area_id,
+              data ->> 'area_name' area_name,
+              data ->> 'associated_id' associated_id,
+              data ->> 'consulted_date' consulted_date,
+              data ->> 'decided_date' decided_date,
+              data ->> 'description' description,
+              data ->> 'docs' docs,
+              data ->> 'last_changed' last_changed,
+              data ->> 'last_different' last_different,
+              data ->> 'last_scraped' last_scraped,
+              data ->> 'link' link,
+              data -> ' location' -> 'coordinates' location_coordinates,
+              data -> 'location' -> 'type' location_type,
+              data -> 'location_x' location_x,
+              data -> 'location_y' location_y,
+              data -> 'name' AS name,
+              data -> 'other_fields' -> 'applicant_name' applicant_name,
+              data -> 'other_fields' -> 'application_type' application_type,
+              data -> 'other_fields' -> 'case_officer' case_officer,
+              data -> 'other_fields' -> 'date_received' date_received,
+              data -> 'other_fields' -> 'date_validated' date_validated,
+              data -> 'other_fields' -> 'decision' decision,
+              data -> 'other_fields' -> 'source_url' source_url,
+              data ->> 'postcode' postcode,
+              data ->> 'reference' reference,
+              data ->> 'scraper_name' scraper_name,
+              data ->> 'start_date' start_date,
+              data ->> 'uid' uid,
+              data ->> 'url' url
+            from
+              planit;
+
+       CREATE UNIQUE INDEX planit_key_fields_id ON planit_key_fields(id);
+
     ''')
 
 
@@ -194,10 +242,10 @@ def download_day(date, path):
         raise Exception('can not handle 15000 a day')
 
 
-def download(today, days):
+def download(today, days, path):
     for days in range(0, days):
         date = str(today - datetime.timedelta(days=days))
-        download_day(date, 'full')
+        download_day(date, path)
 
 
 def transform_to_csv(path='full'):
