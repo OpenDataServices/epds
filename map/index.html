@@ -18,15 +18,18 @@
     <div id="sidebar">
       <h1>EPDS Data Explorer</h1>
       <div>
+        <h2>Step 1: Select a map mode</h2>
         <label for="modeSelect">Map Mode: &nbsp;</label>
         <select id="modeSelect">
           <option value="trees_reserves">TPOs near RSPB Reserves</option>
           <option value="solr_sssi">Solar farm applications in SSSI</option>
         </select>
       </div>
+      <h2>Step 2: Click the button</h2>
       <div>
-          <button id="boxDraw">Draw a Bounding Box</option>
+        BBox: <button id="boxDraw">Draw a Bounding Box</option>
       </div>
+      <h2>Step 3: Draw a box to get data</h2>
     </div>
     <div id="content" style="width: 100%; bottom: 0; top:0; left:20%; right: 0; overflow: hidden; position: absolute;">
       <div style="height: 100%; bottom: 0; top:0; overflow: hidden; position: absolute;" id="map" class="map"></div>
