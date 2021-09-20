@@ -1,6 +1,7 @@
 {
   "name": "vector-wfs",
   "dependencies": {
+    "express": "^4.17.1",
     "ol": "6.7.0"
   },
   "devDependencies": {
@@ -10,6 +11,6 @@
     "startDev": "parcel index.html",
     "build": "parcel build --public-url . index.html",
     "start": "node index.js",
-    "prestart": "parcel build ./src/index.html"
+    "prestart": "parcel build index.html"
   }
 }
