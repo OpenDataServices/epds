@@ -19,128 +19,149 @@ const osm = new TileLayer({
 });
 
 /// RSPB Reserves vector layer
-const reservesVectorSource = new VectorSource({
-  format: new GeoJSON(),
-  url: function (extent) {
-    return (
-      'http://65.21.225.158:8080/geoserver/wfs?' +
-      'version=1.1.0&' +
-      'request=GetFeature&' +
-      'srsname=EPSG:4326&' +
-      'typename=EPDS:rspb_reserves&' +
-      'outputFormat=application/json&' +
-      'bbox=' +
-        extent.join(',') +
-      ',EPSG:3857'
-    );
-  },
-  strategy: bboxStrategy,
-});
+function getRSPBReserves(definedExtent) {
+  const reservesVectorSource = new VectorSource({
+    format: new GeoJSON(),
+    url: function () {
+      return (
+        'http://65.21.225.158:8080/geoserver/wfs?' +
+        'version=1.1.0&' +
+        'request=GetFeature&' +
+        'srsname=EPSG:4326&' +
+        'typename=EPDS:rspb_reserves&' +
+        'outputFormat=application/json&' +
+        'bbox=' +
+          definedExtent.join(',') +
+        ',EPSG:3857'
+      );
+    },
+    strategy: bboxStrategy,
+  });
 
-const reserves = new VectorLayer({
-  source: reservesVectorSource,
-  style: new Style({
-    stroke: new Stroke({
-      color: 'rgba(0, 0, 255, 1.0)',
-      width: 2,
+  const reserves = new VectorLayer({
+    source: reservesVectorSource,
+    style: new Style({
+      stroke: new Stroke({
+        color: 'rgba(0, 0, 255, 1.0)',
+        width: 2,
+      }),
+      fill: new Fill({color: 'rgba(0, 0, 255, 0.4)',}),
     }),
-    fill: new Fill({color: 'rgba(0, 0, 255, 0.4)',}),
-  }),
-});
+  });
+
+  reserves.set('name', 'reserves');
+
+  return reserves;
+}
 
 /// SSSI vector layer
-const sssiVectorSource = new VectorSource({
-  format: new GeoJSON(),
-  url: function (extent) {
-    return (
-      'http://65.21.225.158:8080/geoserver/wfs?' +
-      'version=1.1.0&' +
-      'request=GetFeature&' +
-      'srsname=EPSG:4326&' +
-      'typename=EPDS:all_sssi&' +
-      'outputFormat=application/json&' +
-      'bbox=' +
-        extent.join(',') +
-      ',EPSG:3857'
-    );
-  },
-  strategy: bboxStrategy,
-});
+function getSSSI(definedExtent) {
+  const sssiVectorSource = new VectorSource({
+    format: new GeoJSON(),
+    url: function () {
+      return (
+        'http://65.21.225.158:8080/geoserver/wfs?' +
+        'version=1.1.0&' +
+        'request=GetFeature&' +
+        'srsname=EPSG:4326&' +
+        'typename=EPDS:all_sssi&' +
+        'outputFormat=application/json&' +
+        'bbox=' +
+        definedExtent.join(',') +
+        ',EPSG:3857'
+      );
+    },
+    strategy: bboxStrategy,
+  });
 
-const sssi = new VectorLayer({
-  source: sssiVectorSource,
-  style: new Style({
-    stroke: new Stroke({
-      color: 'rgba(0, 255, 0, 1.0)',
-      width: 2,
+  const sssi = new VectorLayer({
+    source: sssiVectorSource,
+    style: new Style({
+      stroke: new Stroke({
+        color: 'rgba(0, 255, 0, 1.0)',
+        width: 2,
+      }),
+      fill: new Fill({color: 'rgba(0, 255, 0, 0.4)',}),
     }),
-    fill: new Fill({color: 'rgba(0, 255, 0, 0.4)',}),
-  }),
-});
+  });
+
+  return sssi;
+}
+
+
 
 /// TPO vector layer
-const treesVectorSource = new VectorSource({
-  format: new GeoJSON(),
-  url: function (extent) {
-    return (
-      'http://65.21.225.158:8080/geoserver/wfs?' +
-      'version=1.1.0&' +
-      'request=GetFeature&' +
-      'srsname=EPSG:4326&' +
-      'typename=EPDS:trees_near_rspb_reserves&' +
-      'outputFormat=application/json&' +
-      'bbox=' +
-        extent.join(',') +
-      ',EPSG:3857'
-    );
-  },
-  strategy: bboxStrategy,
-});
+function getTPO(definedExtent) {
+  const treesVectorSource = new VectorSource({
+    format: new GeoJSON(),
+    url: function () {
+      return (
+        'http://65.21.225.158:8080/geoserver/wfs?' +
+        'version=1.1.0&' +
+        'request=GetFeature&' +
+        'srsname=EPSG:4326&' +
+        'typename=EPDS:trees_near_rspb_reserves&' +
+        'outputFormat=application/json&' +
+        'bbox=' +
+          definedExtent.join(',') +
+        ',EPSG:3857'
+      );
+    },
+    strategy: bboxStrategy,
+  });
 
-const trees = new VectorLayer({
-  source: treesVectorSource,
-  style: new Style({
+  const tpo = new VectorLayer({
+    source: treesVectorSource,
+    style: new Style({
     image: new Circle({
-      radius: 4,
-      fill: new Fill({color: 'rgba(0, 0, 0, 0.1)',}),
-      stroke: new Stroke({color: 'rgba(255, 0, 0, 0.6)', 
-      width: 2
+        radius: 4,
+        fill: new Fill({color: 'rgba(0, 0, 0, 0.1)',}),
+        stroke: new Stroke({color: 'rgba(255, 0, 0, 0.6)', 
+        width: 2
+        })
       })
-    })
-  }),
-});
+    }),
+  });
+
+  return tpo;
+}
 
 /// Solr vector layer
-const solrVectorSource = new VectorSource({
-  format: new GeoJSON(),
-  url: function (extent) {
-    return (
-      'http://65.21.225.158:8080/geoserver/wfs?' +
-      'version=1.1.0&' +
-      'request=GetFeature&' +
-      'srsname=EPSG:4326&' +
-      'typename=EPDS:Solr_in_SSSI&' +
-      'outputFormat=application/json&' +
-      'bbox=' +
-        extent.join(',') +
-      ',EPSG:3857'
-    );
-  },
-  strategy: bboxStrategy,
-});
+function getSOLR(definedExtent=null) {
+  const solrVectorSource = new VectorSource({
+    format: new GeoJSON(),
+    url: function () {
+      return (
+        'http://65.21.225.158:8080/geoserver/wfs?' +
+        'version=1.1.0&' +
+        'request=GetFeature&' +
+        'srsname=EPSG:4326&' +
+        'typename=EPDS:Solr_in_SSSI&' +
+        'outputFormat=application/json&' +
+        'bbox=' +
+          definedExtent.join(',') +
+        ',EPSG:3857'
+      );
+    },
+    strategy: bboxStrategy,
+  });
 
-const solr = new VectorLayer({
-  source: solrVectorSource,
-  style: new Style({
-    image: new Circle({
-      radius: 4,
-      fill: new Fill({color: 'rgba(0, 0, 0, 0.1)',}),
-      stroke: new Stroke({color: 'rgba(0, 0, 255, 0.6)', 
-      width: 2
+  const solr = new VectorLayer({
+    source: solrVectorSource,
+    style: new Style({
+      image: new Circle({
+        radius: 4,
+        fill: new Fill({color: 'rgba(0, 0, 0, 0.1)',}),
+        stroke: new Stroke({color: 'rgba(0, 0, 255, 0.6)', 
+        width: 2
+        })
       })
-    })
-  }),
-});
+    }),
+  });
+
+  return solr;
+}
+
 
 /// Drawing layers
 const drawingSource = new VectorSource({wrapX: false});
@@ -157,27 +178,27 @@ const map = new Map({
     projection: 'EPSG:3857',
     center: fromLonLat([-3.432, 54.910]),
     zoom: 6,
+    minZoom: 6,
   }),
 });
 
-function getLayers() {
+function getLayers(definedExtent) {
   if (MAPMODE === "trees_reserves") {
-    map.removeLayer(solr)
-    map.removeLayer(sssi)
-    map.addLayer(reserves);
-    map.addLayer(trees);
+    // map.removeLayer(solr)
+    // map.removeLayer(sssi)
+    map.addLayer(getRSPBReserves(definedExtent));
+    map.addLayer(getTPO(definedExtent));
   } else if (MAPMODE === "solr_sssi") {
-    map.removeLayer(reserves);
-    map.removeLayer(trees);
-    map.addLayer(solr)
-    map.addLayer(sssi)
+    // map.removeLayer(reserves);
+    // map.removeLayer(tpo);
+    map.addLayer(getSOLR(definedExtent))
+    map.addLayer(getSSSI(definedExtent))
   }
 }
 
 /// Interactions
 function mapmodeSelection() {
   MAPMODE = modeSelect.value;
-  getLayers()
 }
 
 /**
@@ -186,9 +207,6 @@ function mapmodeSelection() {
  modeSelect.onchange = function () {
   mapmodeSelection();
 };
-
-mapmodeSelection();
-
 
 /// Drawing
 let draw; // global so we can remove it later
@@ -209,7 +227,9 @@ function addInteraction() {
     draw.on('drawstart', function () {
       drawingSource.clear();
     });
-    draw.on('drawend', function () {
+    draw.on('drawend', function (event) {
+      const definedExtent = event.feature.getGeometry().getExtent()
+      getLayers(definedExtent);
       drawMode = "none";
       map.removeInteraction(draw);
     });
