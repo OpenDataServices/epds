@@ -1,3 +1,6 @@
 .ve
 downloaded_data
 _planit_output
+node_modules
+.parcel-cache
+dist
