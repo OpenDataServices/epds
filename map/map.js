@@ -214,7 +214,6 @@ function mapmodeSelection() {
 let draw; // global so we can remove it later
 let drawMode = "none"
 function addInteraction() {
-  console.log(drawMode)
   if (drawMode !== 'none') {
     let geometryFunction;
     if (drawMode === 'box') {
@@ -246,7 +245,7 @@ document.getElementById('boxDraw').addEventListener('click', function () {
 });
 
 document.getElementById ("submitLatLng").addEventListener ("click", function() {
-  const input = document.getElementById('latlng').value;
+  const input = document.getElementById('latlng').value.trim();
   const splitLatLng = input.split(", ", 2);
   const parsedLatLng = splitLatLng.map(value => parseFloat(value))
 
