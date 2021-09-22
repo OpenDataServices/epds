@@ -12,6 +12,7 @@ import Draw, {
   createBox,
 } from 'ol/interaction/Draw';
 
+require('dotenv').config()
 
 /// Raster layer
 const osm = new TileLayer({
@@ -24,7 +25,7 @@ function getRSPBReserves(definedExtent) {
     format: new GeoJSON(),
     url: function () {
       return (
-        'http://65.21.225.158:8080/geoserver/wfs?' +
+        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
         'version=1.1.0&' +
         'request=GetFeature&' +
         'srsname=EPSG:4326&' +
@@ -60,7 +61,7 @@ function getSSSI(definedExtent) {
     format: new GeoJSON(),
     url: function () {
       return (
-        'http://65.21.225.158:8080/geoserver/wfs?' +
+        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
         'version=1.1.0&' +
         'request=GetFeature&' +
         'srsname=EPSG:4326&' +
@@ -96,7 +97,7 @@ function getTPO(definedExtent) {
     format: new GeoJSON(),
     url: function () {
       return (
-        'http://65.21.225.158:8080/geoserver/wfs?' +
+        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
         'version=1.1.0&' +
         'request=GetFeature&' +
         'srsname=EPSG:4326&' +
@@ -132,7 +133,7 @@ function getSOLR(definedExtent=null) {
     format: new GeoJSON(),
     url: function () {
       return (
-        'http://65.21.225.158:8080/geoserver/wfs?' +
+        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
         'version=1.1.0&' +
         'request=GetFeature&' +
         'srsname=EPSG:4326&' +

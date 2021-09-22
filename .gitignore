@@ -4,3 +4,4 @@ _planit_output
 node_modules
 .parcel-cache
 dist
+.env
