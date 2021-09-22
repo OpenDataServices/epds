@@ -3,32 +3,40 @@
   <head>
     <meta charset="UTF-8">
     <title>OpenStreetMap Reprojection</title>
-    <style>
-      .map {
-        width: 100%;
-        height:400px;
-      }
-    </style>
   </head>
   <body>
-    <div id="sidebar">
+    <div id="sidebar" style="width: 18%;">
       <h1>EPDS Data Explorer</h1>
-      <div>
-        <h3>Step 1: Select a map mode</h3>
-        <label for="modeSelect">Map Mode: &nbsp;</label>
-        <select id="modeSelect">
-          <option value="trees_reserves">TPOs near RSPB Reserves</option>
-          <option value="solr_sssi">Solar farm applications in SSSI</option>
-        </select>
+      <div style="background-color: lightgrey; padding: 0 10px 10px 10px;;">
+        <h2>Project mode</h2>
+        <div>
+          <h3>Step 1: Select a map mode</h3>
+          <label for="modeSelect">Map Mode: &nbsp;</label>
+          <select id="modeSelect">
+            <option value="trees_reserves">TPOs near RSPB Reserves</option>
+            <option value="solr_sssi">Solar farm applications in SSSI</option>
+          </select>
+        </div>
+        <h3>Step 2: Click the button</h3>
+        <div>
+          BBox: <button id="boxDraw">Draw a Bounding Box</option>
+        </div>
+        <h3>Step 3: Draw a box to get data</h3>
       </div>
-      <h3>Step 2: Click the button</h3>
-      <div>
-        BBox: <button id="boxDraw">Draw a Bounding Box</option>
+
+      <div style="background-color: lightgrey; padding: 0 10px 10px 10px; margin-top: 20px;">
+        <h2>Location mode</h2>
+        <p>This mode will return all available data within a predefined boundary at a provided Lat Lng point.</p>
+        <h3>Step 1: Enter Latitude and Longitude </h3>
+        <p>In the form: "lat, lng" (e.g. 52.272020, -3.563202)</p>
+        <label for="latlng">Lat, Lng:</label> 
+        <input type="text" id="latlng" name="latlng">
+        <input type="submit" id="submitLatLng" value="Submit">
       </div>
-      <h3>Step 3: Draw a box to get data</h3>
     </div>
-    <div id="content" style="width: 100%; bottom: 0; top:0; left:20%; right: 0; overflow: hidden; position: absolute;">
-      <div style="height: 100%; bottom: 0; top:0; overflow: hidden; position: absolute;" id="map" class="map"></div>
+
+    <div id="content" style="width: 80%; bottom: 0; top:0; left:20%; right: 0; overflow: hidden; position: absolute;">
+      <div style="height: 100%; width: 100%;" id="map" class="map"></div>
     </div>
     <script type="module" src="map.js"></script>
   </body>

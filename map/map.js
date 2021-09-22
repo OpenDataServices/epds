@@ -116,8 +116,8 @@ function getTPO(definedExtent) {
     style: new Style({
     image: new Circle({
         radius: 4,
-        fill: new Fill({color: 'rgba(0, 0, 0, 0.1)',}),
-        stroke: new Stroke({color: 'rgba(255, 0, 0, 0.6)', 
+        fill: new Fill({color: 'rgba(0, 0, 0, 4)',}),
+        stroke: new Stroke({color: 'rgba(255, 0, 0, 1)', 
         width: 2
         })
       })
@@ -152,8 +152,8 @@ function getSOLR(definedExtent=null) {
     style: new Style({
       image: new Circle({
         radius: 4,
-        fill: new Fill({color: 'rgba(0, 0, 0, 0.1)',}),
-        stroke: new Stroke({color: 'rgba(0, 0, 255, 0.6)', 
+        fill: new Fill({color: 'rgba(0, 0, 0, 0.3)',}),
+        stroke: new Stroke({color: 'rgba(0, 0, 255, 1)', 
         width: 2
         })
       })
@@ -185,15 +185,16 @@ const map = new Map({
 
 function getLayers(definedExtent) {
   if (MAPMODE === "trees_reserves") {
-    // map.removeLayer(solr)
-    // map.removeLayer(sssi)
     map.addLayer(getRSPBReserves(definedExtent));
     map.addLayer(getTPO(definedExtent));
   } else if (MAPMODE === "solr_sssi") {
-    // map.removeLayer(reserves);
-    // map.removeLayer(tpo);
     map.addLayer(getSOLR(definedExtent))
     map.addLayer(getSSSI(definedExtent))
+  } else if (MAPMODE === "all_data") {
+    map.addLayer(getSSSI(definedExtent))
+    map.addLayer(getRSPBReserves(definedExtent));
+    map.addLayer(getSOLR(definedExtent))
+    map.addLayer(getTPO(definedExtent));
   }
 }
 
@@ -242,6 +243,18 @@ document.getElementById('boxDraw').addEventListener('click', function () {
   map.removeInteraction(draw);
   drawMode = "box";
   addInteraction();
+});
+
+document.getElementById ("submitLatLng").addEventListener ("click", function() {
+  const input = document.getElementById('latlng').value;
+  const splitLatLng = input.split(", ", 2);
+  const parsedLatLng = splitLatLng.map(value => parseFloat(value))
+
+  map.getView().animate({zoom: 12, center: fromLonLat([parsedLatLng[1], parsedLatLng[0]])}, function () {
+    MAPMODE="all_data"
+    const definedExtent = map.getView().calculateExtent(map.getSize())
+    getLayers(definedExtent);
+  });
 });
 
 addInteraction();
