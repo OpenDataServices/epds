@@ -4,6 +4,7 @@ import OSM from 'ol/source/OSM';
 import GeoJSON from 'ol/format/GeoJSON';
 import View from 'ol/View';
 import VectorSource from 'ol/source/Vector';
+import Overlay from 'ol/Overlay';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { fromLonLat } from 'ol/proj';
 import { bbox as bboxStrategy } from 'ol/loadingstrategy';
@@ -17,6 +18,7 @@ require('dotenv').config()
 /// Raster layer
 const osm = new TileLayer({
   source: new OSM(),
+  name: 'osm',
 });
 
 /// RSPB Reserves vector layer
@@ -41,6 +43,7 @@ function getRSPBReserves(definedExtent) {
 
   const reserves = new VectorLayer({
     source: reservesVectorSource,
+    name: 'reserves',
     style: new Style({
       stroke: new Stroke({
         color: 'rgba(0, 0, 255, 1.0)',
@@ -49,8 +52,6 @@ function getRSPBReserves(definedExtent) {
       fill: new Fill({color: 'rgba(0, 0, 255, 0.4)',}),
     }),
   });
-
-  reserves.set('name', 'reserves');
 
   return reserves;
 }
@@ -77,6 +78,7 @@ function getSSSI(definedExtent) {
 
   const sssi = new VectorLayer({
     source: sssiVectorSource,
+    name: 'sssi',
     style: new Style({
       stroke: new Stroke({
         color: 'rgba(0, 255, 0, 1.0)',
@@ -113,6 +115,7 @@ function getTPO(definedExtent) {
 
   const tpo = new VectorLayer({
     source: treesVectorSource,
+    name: 'tpo',
     style: new Style({
     image: new Circle({
         radius: 4,
@@ -149,6 +152,7 @@ function getSOLR(definedExtent=null) {
 
   const solr = new VectorLayer({
     source: solrVectorSource,
+    name: "solr",
     style: new Style({
       image: new Circle({
         radius: 4,
@@ -257,3 +261,43 @@ document.getElementById ("submitLatLng").addEventListener ("click", function() {
 });
 
 addInteraction();
+
+popup = document.getElementById('popup');
+popupOverlay = new Overlay({
+  element: popup,
+  offset: [9, 9]
+});
+map.addOverlay(popupOverlay);
+
+function getFeatureString(layer, feature) {
+  if (layer.get('name') === 'reserves') {
+    return `RSPB Reserve: ${feature.get('name')}`
+  } else if (layer.get('name') === 'tpo') {
+    return `Tree protection order: ${feature.get('description')}`
+  } else if (layer.get('name') === 'solr') {
+    return `Solar farm application: ${feature.get('description')}`
+  } else if (layer.get('name') === 'sssi') {
+    return `Site of Special Scientific Interest: ${feature.get('country')}`
+  }
+}
+
+map.on('pointermove', (event) => {
+  const features = [];
+  const popupContent = []
+  map.forEachFeatureAtPixel(event.pixel,
+      (feature, layer) => {
+        layer.get('name')==='sssi' && console.log(feature)
+          features.push(feature);
+          const values = getFeatureString(layer, feature);
+          popupContent.push(values);
+          popupContent.push('<br>')
+      },
+  );
+  popup.innerHTML = popupContent.join('');
+  popup.hidden = false;
+  popupOverlay.setPosition(event.coordinate);
+  if (!features || features.length === 0) {
+      popup.innerHTML = '';
+      popup.hidden = true;
+  }
+});
