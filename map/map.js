@@ -21,9 +21,8 @@ const osm = new TileLayer({
   name: 'osm',
 });
 
-/// RSPB Reserves vector layer
-function getRSPBReserves(definedExtent) {
-  const reservesVectorSource = new VectorSource({
+function getVectorSource(layerName, definedExtent) {
+  return new VectorSource({
     format: new GeoJSON(),
     url: function () {
       return (
@@ -31,18 +30,20 @@ function getRSPBReserves(definedExtent) {
         'version=1.1.0&' +
         'request=GetFeature&' +
         'srsname=EPSG:4326&' +
-        'typename=EPDS:rspb_reserves&' +
+        `typename=EPDS:${layerName}&` +
         'outputFormat=application/json&' +
-        'bbox=' +
-          definedExtent.join(',') +
+        `bbox=${definedExtent.join(',')}` +
         ',EPSG:3857'
       );
     },
     strategy: bboxStrategy,
   });
+}
 
+/// RSPB Reserves vector layer
+function getRSPBReserves(definedExtent) {
   const reserves = new VectorLayer({
-    source: reservesVectorSource,
+    source: getVectorSource('rspb_reserves', definedExtent),
     name: 'reserves',
     style: new Style({
       stroke: new Stroke({
@@ -58,26 +59,8 @@ function getRSPBReserves(definedExtent) {
 
 /// SSSI vector layer
 function getSSSI(definedExtent) {
-  const sssiVectorSource = new VectorSource({
-    format: new GeoJSON(),
-    url: function () {
-      return (
-        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
-        'version=1.1.0&' +
-        'request=GetFeature&' +
-        'srsname=EPSG:4326&' +
-        'typename=EPDS:all_sssi&' +
-        'outputFormat=application/json&' +
-        'bbox=' +
-        definedExtent.join(',') +
-        ',EPSG:3857'
-      );
-    },
-    strategy: bboxStrategy,
-  });
-
   const sssi = new VectorLayer({
-    source: sssiVectorSource,
+    source: getVectorSource('all_sssi', definedExtent),
     name: 'sssi',
     style: new Style({
       stroke: new Stroke({
@@ -95,26 +78,8 @@ function getSSSI(definedExtent) {
 
 /// TPO vector layer
 function getTPO(definedExtent) {
-  const treesVectorSource = new VectorSource({
-    format: new GeoJSON(),
-    url: function () {
-      return (
-        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
-        'version=1.1.0&' +
-        'request=GetFeature&' +
-        'srsname=EPSG:4326&' +
-        'typename=EPDS:trees_near_rspb_reserves&' +
-        'outputFormat=application/json&' +
-        'bbox=' +
-          definedExtent.join(',') +
-        ',EPSG:3857'
-      );
-    },
-    strategy: bboxStrategy,
-  });
-
   const tpo = new VectorLayer({
-    source: treesVectorSource,
+    source: getVectorSource('trees_near_rspb_reserves', definedExtent),
     name: 'tpo',
     style: new Style({
     image: new Circle({
@@ -132,26 +97,8 @@ function getTPO(definedExtent) {
 
 /// Solr vector layer
 function getSOLR(definedExtent=null) {
-  const solrVectorSource = new VectorSource({
-    format: new GeoJSON(),
-    url: function () {
-      return (
-        `http://${process.env.GEOSERVER_HOST}:8080/geoserver/wfs?` +
-        'version=1.1.0&' +
-        'request=GetFeature&' +
-        'srsname=EPSG:4326&' +
-        'typename=EPDS:Solr_in_SSSI&' +
-        'outputFormat=application/json&' +
-        'bbox=' +
-          definedExtent.join(',') +
-        ',EPSG:3857'
-      );
-    },
-    strategy: bboxStrategy,
-  });
-
   const solr = new VectorLayer({
-    source: solrVectorSource,
+    source: getVectorSource('Solr_in_SSSI', definedExtent),
     name: "solr",
     style: new Style({
       image: new Circle({
@@ -277,7 +224,9 @@ function getFeatureString(layer, feature) {
   } else if (layer.get('name') === 'solr') {
     return `Solar farm application: ${feature.get('description')}`
   } else if (layer.get('name') === 'sssi') {
-    return `Site of Special Scientific Interest: ${feature.get('country')}`
+    const countryString = feature.get('country');
+    const capitalisedString = countryString.charAt(0).toUpperCase() + countryString.slice(1)
+    return `Site of Special Scientific Interest: ${capitalisedString}`
   }
 }
 
@@ -286,11 +235,12 @@ map.on('pointermove', (event) => {
   const popupContent = []
   map.forEachFeatureAtPixel(event.pixel,
       (feature, layer) => {
-        layer.get('name')==='sssi' && console.log(feature)
+        if (layer) {
           features.push(feature);
           const values = getFeatureString(layer, feature);
           popupContent.push(values);
           popupContent.push('<br>')
+        }
       },
   );
   popup.innerHTML = popupContent.join('');
