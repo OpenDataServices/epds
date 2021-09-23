@@ -1,0 +1,33 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: postgis/postgis
+    restart: always
+    environment:
+      - POSTGRES_DB=epds
+      - POSTGRES_USER=epds
+      - POSTGRES_PASSWORD=epds
+    volumes:
+      - "db:/var/lib/postgresql/data"
+    ports:
+      - 5432:5432
+
+  getter:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://epds:epds@db/epds
+    volumes:
+      - ./:/epds
+      - ./output:/epds/output
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    depends_on:
+      - db
+
+
+volumes:
+  db:
+    driver: local
