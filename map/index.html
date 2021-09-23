@@ -3,6 +3,14 @@
   <head>
     <meta charset="UTF-8">
     <title>OpenStreetMap Reprojection</title>
+    <style>
+      #popup {
+        border-radius: 5px;
+        border: 1px solid grey;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 2px;
+      }
+    </style>
   </head>
   <body>
     <div id="sidebar" style="width: 18%;">
@@ -38,6 +46,7 @@
 
     <div id="content" style="width: 80%; bottom: 0; top:0; left:20%; right: 0; overflow: hidden; position: absolute;">
       <div style="height: 100%; width: 100%;" id="map" class="map"></div>
+      <div id="popup"></div>
     </div>
     <script type="module" src="map.js"></script>
   </body>
