@@ -119,6 +119,7 @@ function getSOLR(definedExtent=null) {
 const drawingSource = new VectorSource({wrapX: false});
 const drawing = new VectorLayer({
   source: drawingSource,
+  name: 'draw',
 });
 
 /// Map creation
@@ -147,6 +148,7 @@ function getLayers(definedExtent) {
     map.addLayer(getSOLR(definedExtent))
     map.addLayer(getTPO(definedExtent));
   }
+  map.removeLayer(drawing)
 }
 
 /// Interactions
