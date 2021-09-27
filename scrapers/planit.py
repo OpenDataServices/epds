@@ -9,6 +9,8 @@ import shutil
 import csv
 import glob
 from hashlib import sha1
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 
 @click.group()
@@ -99,6 +101,80 @@ def update_scrape(days):
        
     '''
     run_sql(sql)
+
+EMAIL_TEMPLATE = '''
+<p>Dear {name}</p>
+
+<p>Here are the list of tree related planning requests found near RSBP reserves or IBAs in Wales:</p>
+
+{matches}
+    '''
+
+MATCH_TEMPLATE = '''
+<hr>
+<b>Name:</b> {name} <br>
+<b>Description:</b> {description} <br>
+<b>Near:</b> {near} <br>
+<b>Address:</b> {address} <br>
+<b>Planit URL:</b> {url} <br>
+<b>Source URL:</b> {source_url} <br>
+<b>Lat Long:</b> {location_x} {location_y}<br>
+'''
+
+sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+
+@click.command()
+@click.option('--date', default=str(datetime.date.today()))
+def generate_emails(date):
+    csv_output_path = f'_planit_output/{str(date)}/wales-trees-near-ibas-rspb-reserves.csv'
+
+    sql = f'''\copy (
+        SELECT pkf.*, 'RSPB Reserve' as near
+        FROM planit p
+        JOIN planit_load pl on p.load_id = pl.id
+        JOIN planit_key_fields pkf on pkf.id = p.id
+        JOIN near_rspb_reserves nr on nr.id = p.id
+        WHERE load_date = '{str(date)}' and new=true and (app_type = 'Trees' or description ilike '%tree%') and area_name in ('Bridgend','Glamorgan','Cardiff','Caerphilly','Newport','Brecon Beacons','Pembroke Coast','Torfaen','Monmouthshire','Snowdonia','Merthyr Tydfil','Rhondda','Denbighshire','Flintshire','Wrexham','Ceredigion','Pembrokeshire','Carmarthenshire','Swansea','Neath','Blaenau Gwent','Powys','Anglesey','Gwynedd','Conwy')
+
+        UNION
+
+        SELECT pkf.*, 'IBA'
+        FROM planit p
+        JOIN planit_load pl on p.load_id = pl.id
+        JOIN planit_key_fields pkf on pkf.id = p.id
+        JOIN near_ibas nr on nr.id = p.id
+        WHERE load_date = '{str(date)}' and new=true and (app_type = 'Trees' or description ilike '%tree%') and area_name in ('Bridgend','Glamorgan','Cardiff','Caerphilly','Newport','Brecon Beacons','Pembroke Coast','Torfaen','Monmouthshire','Snowdonia','Merthyr Tydfil','Rhondda','Denbighshire','Flintshire','Wrexham','Ceredigion','Pembrokeshire','Carmarthenshire','Swansea','Neath','Blaenau Gwent','Powys','Anglesey','Gwynedd','Conwy')
+        ) TO '{csv_output_path}' with CSV HEADER
+    '''
+
+    run_sql(sql.replace('\n',''))
+
+    with open(csv_output_path) as matches_f, open('email_recievers.csv') as recievers_f:
+        recievers_reader = csv.DictReader(recievers_f)
+        matches_reader = csv.DictReader(matches_f)
+        all_matches = list(matches_reader)
+        if not all_matches:
+            ## no matches do not send any emails
+            return
+
+        matches = f"".join([MATCH_TEMPLATE.format(**match) for match in all_matches])
+
+        for reciever in csv.DictReader(recievers_f):
+            email_text = EMAIL_TEMPLATE.format(name=reciever['name'], matches=matches)
+
+
+            message = Mail(
+                from_email='code+epds@opendataservices.coop',
+                to_emails=reciever['email'],
+                subject='New Tree planning request near IBA or RSPB Reserve',
+                html_content=email_text)
+
+            response = sg.send(message)
+            print(f'Sent email to {reciever["name"]} <{reciever["email"]}>')
+
+            print(response.status_code,
+                  response.body, 
+                  response.headers)
 
 
 @click.command()
@@ -201,6 +277,7 @@ cli.add_command(full_scrape)
 cli.add_command(update_scrape)
 cli.add_command(clean)
 cli.add_command(setup)
+cli.add_command(generate_emails)
 
 def run_sql(sql):
     subprocess.run(['psql', os.environ.get('DB_URL', '')], input=sql, text=True, check=True)
