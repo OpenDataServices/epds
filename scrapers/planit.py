@@ -79,8 +79,9 @@ def update_scrape(days):
 
     DROP TABLE planit_load_tmp;
 
-    INSERT INTO planit(load_id, data, latest_change_date, geom, geog) 
+    INSERT INTO planit(name, load_id, data, latest_change_date, geom, geog) 
     SELECT 
+       name,
        id, 
        data, 
        load_date,
@@ -166,7 +167,7 @@ def generate_emails(date):
             message = Mail(
                 from_email='code+epds@opendataservices.coop',
                 to_emails=reciever['email'],
-                subject='New Tree planning request near IBA or RSPB Reserve',
+                subject=f'New Tree planning request near IBA or RSPB Reserve - {date}',
                 html_content=email_text)
 
             response = sg.send(message)
