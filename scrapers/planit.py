@@ -38,6 +38,7 @@ def full_scrape(skipdownload, days):
        name,
        data, 
        load_date, 
+       source,
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float),
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float)
     FROM 
@@ -71,7 +72,7 @@ def update_scrape(days):
 
     INSERT INTO planit_load(key, file, data, load_date, hash, name, new, changed) 
     SELECT 
-      planit_load_tmp.*, CASE WHEN planit.name is null THEN true ELSE false END, CASE WHEN planit.name is null THEN false ELSE true END
+      planit_load_tmp.*, CASE WHEN planit.name is null THEN true ELSE false END, CASE WHEN planit.name is null THEN false ELSE true END, 'planit'
     FROM  
       planit_load_tmp
     LEFT JOIN planit USING (name)
@@ -85,6 +86,7 @@ def update_scrape(days):
        id, 
        data, 
        load_date,
+       source,
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float),
        ST_MakePoint((data ->> 'location_x')::float, (data ->> 'location_y')::float)
     FROM 
@@ -200,7 +202,9 @@ def setup():
                                               name TEXT,
                                               new bool DEFAULT FALSE,
                                               changed bool DEFAULT FALSE,
-                                              processed bool DEFAULT FALSE);
+                                              processed bool DEFAULT FALSE,
+                                              source TEXT
+                                              );
 
        CREATE UNIQUE INDEX planit_load_hash_idx ON planit_load(hash);
        CREATE INDEX planit_load_name_idx ON planit_load(name);
@@ -209,6 +213,7 @@ def setup():
                                          name TEXT, 
                                          load_id bigint, 
                                          data jsonb, 
+                                         source TEXT,
                                          latest_change_date date);
 
                                               
@@ -248,7 +253,7 @@ def setup():
               data ->> 'last_different' last_different,
               data ->> 'last_scraped' last_scraped,
               data ->> 'link' link,
-              data -> ' location' ->> 'coordinates' location_coordinates,
+              data -> 'location' ->> 'coordinates' location_coordinates,
               data -> 'location' ->> 'type' location_type,
               data ->> 'location_x' location_x,
               data ->> 'location_y' location_y,
