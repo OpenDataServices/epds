@@ -203,12 +203,17 @@ window.onload = function () {
     const splitLatLng = input.split(", ", 2);
     const parsedLatLng = splitLatLng.map(value => parseFloat(value))
 
-    map.getView().animate({zoom: 12, center: fromLonLat([parsedLatLng[1], parsedLatLng[0]])}, function () {
+    zoomToCoords(parsedLatLng[0], parsedLatLng[1]);
+
+  });
+
+  function zoomToCoords(lat, lng){
+     map.getView().animate({zoom: 12, center: fromLonLat([lng, lat])}, function () {
       MAPMODE="all_data"
       const definedExtent = map.getView().calculateExtent(map.getSize())
       getLayers(definedExtent);
     });
-  });
+  }
 
   addInteraction();
 
@@ -309,5 +314,16 @@ window.onload = function () {
     if (event.target == modal) {
       modal.style.display = "none";
     }
+  }
+
+  if (window.location.search){
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get("lat");
+    const lng = urlParams.get("lng");
+
+    if (lat && lng){
+      zoomToCoords(parseFloat(lat), parseFloat(lng));
+    }
+
   }
 }
