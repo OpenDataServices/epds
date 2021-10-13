@@ -316,6 +316,10 @@ window.onload = function () {
     }
   }
 
+
+  // Post to any parent window the preferred height. Used when the page is an iframe
+  window.parent.postMessage({ heightRequest: window.outerHeight }, "*");
+
   if (window.location.search){
     const urlParams = new URLSearchParams(window.location.search);
     const lat = urlParams.get("lat");
