@@ -203,6 +203,7 @@ def setup():
                                               processed bool DEFAULT FALSE);
 
        CREATE UNIQUE INDEX planit_load_hash_idx ON planit_load(hash);
+       CREATE UNIQUE INDEX planit_load_date_name ON planit_load(load_date, name);
        CREATE INDEX planit_load_name_idx ON planit_load(name);
 
        CREATE TABLE IF NOT EXISTS planit(id SERIAL PRIMARY KEY, 
